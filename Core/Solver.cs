@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Priority_Queue;
 
 namespace Astroants.Core
@@ -8,67 +7,72 @@ namespace Astroants.Core
     {
         public static Solution Solve(Planet planet)
         {
-            var areaQueue = new SimplePriorityQueue<Area, int>();
-            areaQueue.Enqueue(planet.Sugar, GetQueuePriority(planet.Sugar, planet.Astroants));
-            planet.Sugar.TotalDuration = 0;
+            var areas = planet.Areas;
 
-            while (areaQueue.Count > 0)
+            var currentArea = areas[planet.Sugar];
+            currentArea.Duration = 0;
+            currentArea.DurationFromStart = 0;
+
+            var endArea = planet.Areas[planet.Astroants];
+            endArea.Duration = 0;
+
+            var areaQueue = new FastPriorityQueue<Area>(areas.Length);
+
+            while (true)
             {
-                var currentArea = areaQueue.Dequeue();
-                if (currentArea == planet.Astroants)
+                if (currentArea == endArea)
                     return GetSolution(planet);
 
                 currentArea.Visited = true;
 
-                foreach (var pair in currentArea.Neighbors)
+                for (var i = 0; i < currentArea.Neighbors.Length; i++)
                 {
-                    var neighbor = pair.Value;
+                    var direction = currentArea.Neighbors[i];
+                    var neighbor = areas.GetNeighbor(currentArea.Coords, direction);
                     if (neighbor.Visited)
                         continue;
 
-                    var totalDuration = currentArea.TotalDuration + neighbor.Duration;
-                    if (totalDuration >= neighbor.TotalDuration)
+                    var durationFromStart = currentArea.DurationFromStart + neighbor.Duration;
+                    if (durationFromStart >= neighbor.DurationFromStart)
                         continue;
 
-                    neighbor.CameFrom = pair.Key;
-                    neighbor.TotalDuration = totalDuration;
+                    neighbor.CameFrom = direction;
+                    neighbor.DurationFromStart = durationFromStart;
 
-                    var priority = GetQueuePriority(neighbor, planet.Astroants);
-                    if (neighbor.InQueue)
+                    if (areaQueue.Contains(neighbor))
                     {
-                        areaQueue.UpdatePriority(neighbor, priority);
+                        areaQueue.UpdatePriority(neighbor, neighbor.TotalEstimatedDuration);
                     }
                     else
                     {
-                        areaQueue.Enqueue(neighbor, priority);
-                        neighbor.InQueue = true;
+                        neighbor.SetEstimatedDurationTo(endArea.Coords);
+                        areaQueue.Enqueue(neighbor, neighbor.TotalEstimatedDuration);                        
                     }
                 }
-            }
-            return null;
-        }
 
-        static int GetQueuePriority(Area currentArea, Area endArea)
-        {
-            return currentArea.TotalDuration + Math.Abs(currentArea.X - endArea.X) + Math.Abs(currentArea.Y - endArea.Y);
+                if (areaQueue.Count == 0)
+                    return null;
+
+                currentArea = areaQueue.Dequeue();
+            }
         }
 
         static Solution GetSolution(Planet planet)
         {
-            var path = new List<Direction>(); 
-            var current = planet.Astroants;
-            while (current != planet.Sugar)
+            var areas = planet.Areas;
+            var current = areas[planet.Astroants];
+            var endArea = areas[planet.Sugar];
+
+            var solution = new Solution { Duration = current.DurationFromStart, Path = new List<Direction>() };
+
+            while (current != endArea)
             {
                 var opposite = current.CameFrom.GetOpposite();
-                path.Add(opposite);
-                current = current.Neighbors[opposite];
+                solution.Path.Add(opposite);
+                current = areas.GetNeighbor(current.Coords, opposite);
             }
 
-            return new Solution
-            {
-                Duration = planet.Astroants.TotalDuration,
-                Path = path
-            };
+            return solution;
         }
     }
 }

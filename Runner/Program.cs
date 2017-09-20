@@ -1,6 +1,7 @@
 ﻿using Astroants.Core;
 using Astroants.RestApiClient;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace Astroants.Runner
@@ -9,25 +10,41 @@ namespace Astroants.Runner
     {
         const string Url = "http://tasks-rad.quadient.com:8080";
 
-        static int Main(string[] args)
+        static async Task Main(string[] args)
         {
             using (var client = new Client(Url))
             {
-                return Run(client).Result;
+                var ok = await Run(client);
+                if (!ok)
+                    Console.WriteLine("Error occured.");
             }
         }
 
-        static async Task<int> Run(IClient client)
+        static async Task<bool> Run(IClient client)
         {
+            var watch = new Stopwatch();
+
+
+            Console.Write("Fetching planet...");
+            watch.Start();
             var planet = await client.GetAsync();
+            WriteDone(watch);
             if (planet == null)
-                return 1;
+                return false;
 
+            Console.Write("Finding path...");
+            watch.Start();
             var solution = Solver.Solve(planet);
+            WriteDone(watch);
+            if (solution == null)
+                return false;
 
+            Console.Write("Sending result...");
+            watch.Start();
             var result = await client.PutAsync(planet.Id, solution.Path);
+            WriteDone(watch);
             if (result == null)
-                return 1;
+                return false;
 
             if (result.Valid)
             {
@@ -41,7 +58,13 @@ namespace Astroants.Runner
 #if DEBUG
             Console.ReadKey();
 #endif
-            return 0;
+            return true;
+        }
+
+        static void WriteDone(Stopwatch watch)
+        {
+            Console.WriteLine($" done in {watch.ElapsedMilliseconds} ms");
+            watch.Reset();
         }
     }
 }

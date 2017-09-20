@@ -2,12 +2,11 @@
 using ApprovalTests.Namers;
 using ApprovalTests.Reporters;
 using Astroants.Core;
-using Astroants.RestApiClient;
+using Astroants.RestApiClient.Api;
 using FluentAssertions;
 using Newtonsoft.Json;
 using System.IO;
 using Xunit;
-using ApiPlanet = Astroants.RestApiClient.Api.Planet;
 
 namespace Astroants.Test.Core
 {
@@ -25,7 +24,7 @@ namespace Astroants.Test.Core
         [UseReporter(typeof(DiffReporter))]
         public void FindsPath(int planetId)
         {
-            var planet = GetPlanet(planetId);
+            var planet = GetPlanet(planetId).ToPlanet();
             var solution = Solver.Solve(planet);
             var expected = $"{{\"path\":\"{solution.Path.GetCodes()}\"}}";
 
@@ -44,10 +43,11 @@ namespace Astroants.Test.Core
         [InlineData(1209)]
         public void AstroantsAndSugarCanBeSwapped(int planetId)
         {
-            var planet = GetPlanet(planetId);
+            var apiPlanet = GetPlanet(planetId);
+            var planet = apiPlanet.ToPlanet();
             var reversed = Solver.Solve(planet);
 
-            planet = GetPlanet(planetId);
+            planet = apiPlanet.ToPlanet();
             var swap = planet.Astroants;
             planet.Astroants = planet.Sugar;
             planet.Sugar = swap;
@@ -57,11 +57,10 @@ namespace Astroants.Test.Core
             reversed.Duration.ShouldBeEquivalentTo(regular.Duration);
         }
 
-        static Planet GetPlanet(int planetId)
+        static PlanetJson GetPlanet(int planetId)
         {
             var json = File.ReadAllText($"Core/planet-{planetId}.json");
-            var planet = JsonConvert.DeserializeObject<ApiPlanet>(json);
-            return PlanetFactory.Create(planet);
+            return JsonConvert.DeserializeObject<PlanetJson>(json);
         }
     }
 }

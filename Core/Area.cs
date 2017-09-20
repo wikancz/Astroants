@@ -1,25 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using Priority_Queue;
 
 namespace Astroants.Core
 {
-    public class Area
+    public class Area : FastPriorityQueueNode 
     {
-        public int X { get; set; }
-        public int Y { get; set; }
-
+        public Coords Coords { get; set; }
         public int Duration { get; set; }
+        public Direction[] Neighbors { get; set; }
 
-        public Dictionary<Direction, Area> Neighbors { get; set; }
-
-        public bool Visited { get; set; }
-        public bool InQueue { get; set; }
-        public Direction CameFrom { get; set; }
-        public int TotalDuration { get; set; }
+        internal bool Visited { get; set; }
+        internal Direction CameFrom { get; set; }
+        internal int DurationFromStart { get; set; }
+        internal int EstimatedDurationToEnd { get; private set; }
+        internal int TotalEstimatedDuration => DurationFromStart + EstimatedDurationToEnd;
 
         public Area()
         {
-            Neighbors = new Dictionary<Direction, Area>();
-            TotalDuration = int.MaxValue;
+            DurationFromStart = int.MaxValue;
+        }
+
+        public void SetEstimatedDurationTo(Coords endArea)
+        {
+            EstimatedDurationToEnd = Math.Abs(Coords.X - endArea.X) + Math.Abs(Coords.Y - endArea.Y);
         }
     }
 }

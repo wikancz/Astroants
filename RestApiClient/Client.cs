@@ -1,4 +1,5 @@
 ﻿using Astroants.Core;
+using Astroants.RestApiClient.Api;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -17,41 +18,69 @@ namespace Astroants.RestApiClient
         {
             _client = new HttpClient
             {
-                BaseAddress = new Uri(url)
+                BaseAddress = new Uri(url),
+                Timeout = TimeSpan.FromSeconds(15)
             };
         }
 
         public async Task<Planet> GetAsync()
         {
-            var response = await _client.GetAsync("task");
-            if (!response.IsSuccessStatusCode)
-                return null;
-
-            var json = await response.Content.ReadAsStringAsync();
-            var planet = JsonConvert.DeserializeObject<Api.Planet>(json);
+            try
+            {
+                var response = await _client.GetStringAsync("task");
+                var planetJson = JsonConvert.DeserializeObject<PlanetJson>(response);
 #if DEBUG
-            await WriteDebugFile(planet.Id, "planet", json);
+                await WriteDebugFile(planetJson.Id, "planet", response);
 #endif
-            return PlanetFactory.Create(planet);
+                return planetJson.ToPlanet();
+            }
+            catch (TaskCanceledException)
+            {
+                Console.WriteLine("Connection timeout.");
+                return null;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return null;
+            }
         }
 
-        public async Task<Api.Result> PutAsync(ulong planetId, List<Direction> path)
+        public async Task<ResultJson> PutAsync(ulong planetId, List<Direction> path)
         {
-            var json = $"{{\"path\":\"{path.GetCodes()}\"}}";
+            HttpResponseMessage response = null;
+            try
+            {
+                var json = $"{{\"path\":\"{path.GetCodes()}\"}}";
 #if DEBUG
-            await WriteDebugFile(planetId, "solution", json);
+                await WriteDebugFile(planetId, "solution", json);
 #endif
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                response = await _client.PutAsync($"task/{planetId}", content);
+                
+                if (!response.IsSuccessStatusCode)
+                    return null;
 
-            var response = await _client.PutAsync($"task/{planetId}", content);
-            if (!response.IsSuccessStatusCode)
+                json = await response.Content.ReadAsStringAsync();
+#if DEBUG
+                await WriteDebugFile(planetId, "result", json);
+#endif
+                return JsonConvert.DeserializeObject<Api.ResultJson>(json);
+            }
+            catch(TaskCanceledException)
+            {
+                Console.WriteLine("Connection timeout.");
                 return null;
-
-            json = await response.Content.ReadAsStringAsync();
-#if DEBUG
-            await WriteDebugFile(planetId, "result", json);
-#endif
-            return JsonConvert.DeserializeObject<Api.Result>(json);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+                return null;
+            }
+            finally
+            {
+                response?.Dispose();
+            }
         }
 
         public void Dispose()

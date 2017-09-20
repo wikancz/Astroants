@@ -6,9 +6,9 @@ namespace Astroants.Core
     public enum Direction
     {
         Up = 1,
-        Down,
         Left,
-        Right
+        Right,
+        Down
     }
 
     public static class DirectionEx
@@ -19,12 +19,12 @@ namespace Astroants.Core
             {
                 case Direction.Up:
                     return 'U';
-                case Direction.Down:
-                    return 'D';
                 case Direction.Left:
                     return 'L';
                 case Direction.Right:
                     return 'R';
+                case Direction.Down:
+                    return 'D';
                 default:
                     throw new ArgumentOutOfRangeException(nameof(direction));
             }
@@ -32,19 +32,7 @@ namespace Astroants.Core
 
         public static Direction GetOpposite(this Direction direction)
         {
-            switch (direction)
-            {
-                case Direction.Up:
-                    return Direction.Down;
-                case Direction.Down:
-                    return Direction.Up;
-                case Direction.Left:
-                    return Direction.Right;
-                case Direction.Right:
-                    return Direction.Left;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(direction));
-            }
+            return 5 - direction;
         }
 
         public static string GetCodes(this List<Direction> path)
@@ -55,6 +43,23 @@ namespace Astroants.Core
                 chars[i] = path[i].GetCode();
             }
             return new string(chars);
+        }
+
+        public static Direction FromCode(char code)
+        {
+            switch (code)
+            {
+                case 'U':
+                    return Direction.Up;
+                case 'L':
+                    return Direction.Left;
+                case 'R':
+                    return Direction.Right;
+                case 'D':
+                    return Direction.Down;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(code));
+            }
         }
     }
 }

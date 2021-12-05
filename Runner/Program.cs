@@ -1,10 +1,7 @@
 ﻿using Astroants.Core;
 using Astroants.RestApiClient;
-using Astroants.RestApiClient.Api;
-using Newtonsoft.Json;
 using System;
 using System.Diagnostics;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace Astroants.Runner
@@ -13,7 +10,7 @@ namespace Astroants.Runner
     {
         const string Url = "http://tasks-rad.quadient.com:8080";
 
-        static async Task Main2(string[] args)
+        static async Task Main(string[] args)
         {
             using (var client = new Client(Url))
             {
@@ -23,24 +20,10 @@ namespace Astroants.Runner
             }
         }
 
-        static void Main(string[] args)
-        {
-            var watch = new Stopwatch();
-
-            Console.Write("Reading planet...");
-            watch.Start();
-            var planet = JsonConvert.DeserializeObject<PlanetJson>(File.ReadAllText(args[0]));
-            WriteDone(watch);
-
-            Console.Write("Finding path...");
-            watch.Start();
-            var solution = Solver.Solve(planet.ToPlanet());
-            WriteDone(watch);
-        }
-
         static async Task<bool> Run(IClient client)
         {
             var watch = new Stopwatch();
+
 
             Console.Write("Fetching planet...");
             watch.Start();

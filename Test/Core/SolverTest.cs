@@ -54,7 +54,7 @@ namespace Astroants.Test.Core
 
             var regular = Solver.Solve(planet);
             
-            reversed.Duration.Should().Be(regular.Duration);
+            reversed.Duration.ShouldBeEquivalentTo(regular.Duration);
         }
 
         static PlanetJson GetPlanet(int planetId)

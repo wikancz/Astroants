@@ -6,7 +6,7 @@ namespace Astroants.RestApiClient.Api
     {
         public ulong Id { get; set; }
         public ulong StartedTimestamp { get; set; }
-        public Map Map { get; set; }
+        public string[] Areas { get; set; }
         public Coords Astroants { get; set; }
         public Coords Sugar { get; set; }
 
@@ -15,7 +15,7 @@ namespace Astroants.RestApiClient.Api
             return new Planet
             {
                 Id = Id,
-                Areas = new LazyAreaArray(Map.Areas),
+                Areas = new LazyAreaArray(Areas),
                 Sugar = Sugar,
                 Astroants = Astroants
             };

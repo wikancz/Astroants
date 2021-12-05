@@ -14,10 +14,7 @@ namespace Astroants.Test.RestApiClient
             {
                 Id = 2727,
                 StartedTimestamp = 1503929807498,
-                Map = new Map
-                {
-                    Areas = new string[] { "5-R", "1-RDL", "10-DL", "2-RD", "1-UL", "1-UD", "2-RU", "1-RL", "2-UL" }
-                },
+                Areas = new string[] { "5-R", "1-RDL", "10-DL", "2-RD", "1-UL", "1-UD", "2-RU", "1-RL", "2-UL" },
                 Astroants = new Coords { X = 1, Y = 0 },
                 Sugar = new Coords { X = 2, Y = 1 }
             };
